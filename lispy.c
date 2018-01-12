@@ -14,6 +14,12 @@
 enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR, LVAL_QEXPR };
 enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
 
+/* Forward declarations */
+void lval_print(lval* v);
+lval* lval_eval_sexpr(lval* v);
+lval* builtin_op(lval* a, char* op);
+lval* builtin(lval* a, char* func);
+
 typedef struct lval {
     int type;
     long num;
@@ -25,6 +31,8 @@ typedef struct lval {
     int count;
     struct lval** cell;
 } lval;
+
+/* lval evaluation functions */
 
 lval* lval_num(long x) {
     lval* v = malloc(sizeof(lval));
@@ -65,6 +73,7 @@ lval* lval_qexpr(void) {
     return v;
 }
 
+/* memory management for lvals in the list */
 void lval_del(lval* v) {
     switch (v->type) {
         case LVAL_NUM: break;
@@ -84,17 +93,18 @@ void lval_del(lval* v) {
     free(v);
 }
 
-lval* lval_read_num(mpc_ast_t* t) {
-    errno = 0;
-    long x = strtol(t->contents, NULL, 10);
-    return errno != ERANGE ? lval_num(x) : lval_err("Invalid number");
-}
-
 lval* lval_add(lval* v, lval* x) {
     v->count++;
     v->cell = realloc(v->cell, sizeof(lval*) * v->count);
     v->cell[v->count - 1] = x;
     return v;
+}
+
+/* read lvals properly */
+lval* lval_read_num(mpc_ast_t* t) {
+    errno = 0;
+    long x = strtol(t->contents, NULL, 10);
+    return errno != ERANGE ? lval_num(x) : lval_err("Invalid number");
 }
 
 lval* lval_read(mpc_ast_t* t) {
@@ -118,11 +128,7 @@ lval* lval_read(mpc_ast_t* t) {
     return x;
 }
 
-void lval_print(lval* v);
-lval* lval_eval_sexpr(lval* v);
-lval* builtin_op(lval* a, char* op);
-lval* builtin(lval* a, char* func);
-
+/* lval printing functions */
 void lval_expr_print(lval* v, char open, char close) {
     putchar(open);
     for (int i = 0; i < v->count; i++) {
@@ -151,6 +157,7 @@ void lval_println(lval* v) {
     putchar('\n');
 }
 
+/* lval evaluation functions */
 lval* lval_pop(lval* v, int i) {
     lval* x = v->cell[i];
 
@@ -195,6 +202,7 @@ lval* lval_eval_sexpr(lval* v) {
     return result;
 }
 
+/* Lispy builtins */
 lval* builtin_op(lval* a, char* op) {
 
   /* Ensure all arguments are numbers */
