@@ -2,8 +2,10 @@
 #include <stdlib.h>
 
 #include <editline/readline.h>
+#ifdef __APPLE__
+#else
 #include <editline/history.h>
-
+#endif
 #include "mpc.h"
 
 enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR };
@@ -78,7 +80,7 @@ lval* lval_read_num(mpc_ast_t* t) {
 
 lval* lval_add(lval* v, lval* x) {
     v->count++;
-    v->cell = realloc(v->cell, sizeof(lval) * v->count);
+    v->cell = realloc(v->cell, sizeof(lval*) * v->count);
     v->cell[v->count - 1] = x;
     return v;
 }
@@ -89,7 +91,7 @@ lval* lval_read(mpc_ast_t* t) {
 
     lval* x = NULL;
     if (strcmp(t->tag, ">") == 0) { x = lval_sexpr(); }
-    if (strcmp(t->tag, "sexpr") == 0) { x = lval_sexpr(); }
+    if (strcmp(t->tag, "sexpr")) { x = lval_sexpr(); }
 
     for (int i = 0; i < t->children_num; i++) {
         if (strcmp(t->children[i]->contents, "(") == 0) { continue; }

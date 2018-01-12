@@ -1,2 +1,2 @@
 all:
-	clang -std=c99 -Wall lispy.c mpc.c -ledit -lm -o lispy
+	clang -std=c99 -g -Wall lispy.c mpc.c -ledit -lm -o lispy
